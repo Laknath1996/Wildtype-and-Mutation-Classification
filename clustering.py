@@ -1,5 +1,5 @@
 # author : Ashwin de Silva
-# perform t-sne on the dataset
+# perform unsupervised clustering
 
 # import the libraries
 
@@ -18,18 +18,18 @@ from sklearn.svm import SVC
 from utilities import plot_decision_regions
 from sklearn.decomposition import PCA
 from sklearn import metrics
+from sklearn.cluster import KMeans, DBSCAN, AffinityPropagation
 
 # define useful parameters
 
 # selection paramters
 TIME_POINTS = [7, 8]
-REMOVE_LOW_VARIANCE_PARAMS = True
 LOW_VARIANCE_THRESHOLD = 30
 ELIMINATE_REDUNDANT_PARAMS = False
 
 # outlier removal parameters
 REMOVE_OUTLIERS = True
-M = 5
+M = 7
 
 # T_SNE paramters
 PERPLEXITY = 15
@@ -49,15 +49,14 @@ redundant_params  = ['cvSCBDuration','cvSCBSize','cvDuration','cvInbis',
 
 # load the dataset
 DIV = TIME_POINTS
-X_train, y_train, time_points, params = load_custom_dataset(DIV, 1)  # for custom dataset
+X_train, y_train, time_points, params = load_custom_dataset(DIV)  # for custom dataset
 
 # remove redunduant params
 if (ELIMINATE_REDUNDANT_PARAMS):
     X_train, params = removeRedundantParams(X_train, redundant_params)
 
 # remove the low variance params
-if (REMOVE_LOW_VARIANCE_PARAMS):
-    X_train = removeParams(X_train, LOW_VARIANCE_THRESHOLD)
+X_train = removeParams(X_train, LOW_VARIANCE_THRESHOLD)
 
 # remove the outliers
 if (REMOVE_OUTLIERS):
@@ -68,68 +67,53 @@ sc = StandardScaler()
 #sc = MinMaxScaler()
 X_train_std = sc.fit_transform(X_train)
 
-# implement dimension reduction algorithm
+# implement t-sne algorithm
 tsne = TSNE(n_components=2, perplexity=PERPLEXITY, early_exaggeration=EARLY_EXAGGERATION , learning_rate=LEARNING_RATE,
             init='random', n_iter=N_ITER,
             min_grad_norm=MIN_GRAD_NORM, verbose=True, random_state=RANDOM_STATE) # this model worked well for DIV28
 
-pca = PCA(n_components=2)
-
-
 # reduce the dimension
 X_train_redu = tsne.fit_transform(X_train_std)
-params = tsne.get_params()
-# X_train_redu = pca.fit_transform(X_train_std)
 
-# perform classification
-svm = SVC(kernel='rbf', random_state=0, gamma=GAMMA, C=C, verbose=True, probability=True)
-svm.fit(X_train_redu, y_train)
+# perform clustering
+#y_train_pred = KMeans(n_clusters=2, random_state=RANDOM_STATE).fit_predict(X_train_redu)
+#y_train_pred = DBSCAN(eps=0.5, min_samples=5, metric='euclidean', metric_params=None, algorithm='auto',
+#                leaf_size=30, p=None, n_jobs=1).fit_predict(X_train_redu)
+#y_train_pred = AffinityPropagation(damping=0.5, max_iter=200, convergence_iter=15, copy=True, preference=None,
+#                                   affinity='euclidean', verbose=False).fit_predict(X_train_redu)
 
 
+
+#plot the results
+plt.scatter(X_train_redu[:, 0], X_train_redu[:, 1], c=y_train_pred)
+plt.show()
 
 # performance metrics
-y_train_pred = svm.predict(X_train_redu) # the training set predictions
-scores = svm.predict_proba(X_train_redu)
-print(np.shape(scores))
-ACCURACY_SCORE = svm.score(X_train_redu, y_train, sample_weight=None)
 NMI = metrics.adjusted_mutual_info_score(y_train, y_train_pred)
+ACCURACY_SCORE = metrics.accuracy_score(y_train, y_train_pred)
 
 
 # print the summary
 print('\n')
 print('Time Points Used : ', DIV)
-print('Total Datapoints used : ', np.size(X_train_redu, 0))
-print('Remove Low Variance Variables : ', REMOVE_LOW_VARIANCE_PARAMS )
-if (REMOVE_LOW_VARIANCE_PARAMS):
-    print('Low Variance Threshold : ', LOW_VARIANCE_THRESHOLD)
-print('Remove Outliers : ', REMOVE_OUTLIERS)
-if (REMOVE_OUTLIERS):
-    print('Absolute distance to the median : ', M)
-print('Perplexity of TSNE : ', PERPLEXITY)
-print('\n Model Performance Metrics \n')
-print('Training Set Accuracy : ', ACCURACY_SCORE)
+print('Low Variance Threshold : ', LOW_VARIANCE_THRESHOLD)
+print('Absolute distance to the median : ', M)
+print('Perplexity : ', PERPLEXITY)
+print('Accuracy Score : ', ACCURACY_SCORE)
 print('Training Set Normalized Mutual Information : ', NMI)
-print('\n')
-print(metric_report(y_train, y_train_pred))
-print('Jaccard Similarity Score : ', jaccard_score(y_train, y_train_pred))
-print('Model Params : ', params)
 
 
+# plot the results
 
-# plot the lower dimensional embedding
 #multi_timepoints_plot(X_train_tsne, y_train, time_points) # for the full dataset
-single_timepoint_plot(X_train_redu, y_train, DIV) # plot the redcued dimensional embedding
-
-# plot the svm decision boundaries
-plot_decision_regions(X_train_redu, y_train, classifier=svm) # plot the regional boundaries
-
-# plot the precision recall call for different threshold probabilities
-plot_precision_recall_curve(y_train, scores)
-
-# plot the ROC curve
-plot_ROC_curve(y_train, scores)
-
-
+# single_timepoint_plot(X_train_redu, y_train, DIV) # plot the redcued dimensional embedding
+#
+# plot_decision_regions(X_train_redu, y_train, classifier=svm) # plot the regional boundaries
+#
+# plt.xlabel('Dim 1')
+# plt.ylabel('DIm 2')
+# plt.title('Reduced Dimension Visualization')
+# plt.show()
 
 
 
