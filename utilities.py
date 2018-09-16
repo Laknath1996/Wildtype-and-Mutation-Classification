@@ -35,7 +35,7 @@ def plot_decision_regions(X, y, classifier, resolution=0.02):
     plt.xlabel('Dim 1')
     plt.ylabel('DIm 2')
     plt.title('Reduced Dimension Visualization')
-    plt.show()
+    # plt.show()
 
 
 def multi_timepoints_plot(X_reduced, y_train, time_points):
@@ -92,9 +92,9 @@ def single_timepoint_plot(X_reduced, y_train, DIV):
 def load_full_dataset(sel):
     # load the full dataset
     if (sel == 1):
-        var = sio.loadmat('dataset/dataset_R853Q.mat')
+        var = sio.loadmat('/Users/ashwin/Florey Work MAc/Wild type and Mutation Classification/dataset/dataset_R853Q.mat')
     if (sel == 2):
-        var = sio.loadmat('dataset/dataset_R1882Q.mat')
+        var = sio.loadmat('/Users/ashwin/Florey Work MAc/Wild type and Mutation Classification/dataset/dataset_R1882Q.mat')
     data = var['data']
     params = var['params']
 
@@ -127,9 +127,9 @@ def load_single_dataset():
 def load_custom_dataset(DIV, sel ):
     # load the volume dataset
     if (sel == 1):
-        var = sio.loadmat('dataset/dataset_R853Q.mat')
+        var = sio.loadmat('/Users/ashwin/Florey Work/Wild type and Mutation Classification/dataset/dataset_R853Q.mat')
     if (sel == 2):
-        var = sio.loadmat('dataset/dataset_R1882Q.mat')
+        var = sio.loadmat('/Users/ashwin/Florey Work/Wild type and Mutation Classification/dataset/dataset_R1882Q.mat')
     data = var['data']
     params = var['params']
 

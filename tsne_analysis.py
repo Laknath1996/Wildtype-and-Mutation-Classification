@@ -18,18 +18,22 @@ from sklearn.svm import SVC
 from utilities import plot_decision_regions
 from sklearn.decomposition import PCA
 from sklearn import metrics
+from core import *
+from utils import *
+import scipy.io as sio
+import umap
 
 # define useful parameters
 
 # selection paramters
-TIME_POINTS = [7, 8]
+TIME_POINTS = [7,8]
 REMOVE_LOW_VARIANCE_PARAMS = True
 LOW_VARIANCE_THRESHOLD = 30
 ELIMINATE_REDUNDANT_PARAMS = False
 
 # outlier removal parameters
-REMOVE_OUTLIERS = True
-M = 5
+REMOVE_OUTLIERS = False
+M = 3
 
 # T_SNE paramters
 PERPLEXITY = 15
@@ -40,8 +44,8 @@ MIN_GRAD_NORM = 1e-7
 RANDOM_STATE = 25
 
 # SVM parameters
-GAMMA = 0.01
-C = 15.0
+GAMMA = 0.001
+C = 300.0
 
 # define redundant features
 redundant_params  = ['cvSCBDuration','cvSCBSize','cvDuration','cvInbis',
@@ -68,23 +72,38 @@ sc = StandardScaler()
 #sc = MinMaxScaler()
 X_train_std = sc.fit_transform(X_train)
 
-# implement dimension reduction algorithm
-tsne = TSNE(n_components=2, perplexity=PERPLEXITY, early_exaggeration=EARLY_EXAGGERATION , learning_rate=LEARNING_RATE,
-            init='random', n_iter=N_ITER,
-            min_grad_norm=MIN_GRAD_NORM, verbose=True, random_state=RANDOM_STATE) # this model worked well for DIV28
+# save the X_train_std to a .mat file
+#dict = {'X' : X_train_std, 'Y' : y_train}
+#sio.savemat('X_train_std.mat', dict)
 
-pca = PCA(n_components=2)
+
+
+# implement dimension reduction algorithm
+# tsne = TSNE(n_components=2, perplexity=PERPLEXITY, early_exaggeration=EARLY_EXAGGERATION , learning_rate=LEARNING_RATE,
+#             init='random', n_iter=N_ITER,
+#             min_grad_norm=MIN_GRAD_NORM, verbose=True, random_state=RANDOM_STATE) # this model worked well for DIV28
+
+X_train_redu = umap.UMAP(n_neighbors=15,
+                      min_dist=0.1,
+                      metric='correlation').fit_transform(X_train_std)
+# pca = PCA(n_components=2)
+
+# implement the parametric t-sne
+
+# high_dims = 15 #X_train_std.shape[1]
+# num_outputs = 2
+# perplexity =  0
+# ptSNE = Parametric_tSNE(high_dims, num_outputs, perplexity)
+# X_train_redu = ptSNE.transform(X_train_std)
 
 
 # reduce the dimension
-X_train_redu = tsne.fit_transform(X_train_std)
-params = tsne.get_params()
-# X_train_redu = pca.fit_transform(X_train_std)
+# X_train_redu = tsne.fit_transform(X_train_std)
+
 
 # perform classification
 svm = SVC(kernel='rbf', random_state=0, gamma=GAMMA, C=C, verbose=True, probability=True)
 svm.fit(X_train_redu, y_train)
-
 
 
 # performance metrics
@@ -112,7 +131,7 @@ print('Training Set Normalized Mutual Information : ', NMI)
 print('\n')
 print(metric_report(y_train, y_train_pred))
 print('Jaccard Similarity Score : ', jaccard_score(y_train, y_train_pred))
-print('Model Params : ', params)
+#print('Model Params : ', params)
 
 
 
